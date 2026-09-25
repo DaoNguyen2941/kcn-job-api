@@ -14,6 +14,8 @@ import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { QueryCompanyDto } from './dto/query-company.dto';
+import { CompanyResponseDto } from './dto/res-company.dto';
+import { plainToInstance } from 'class-transformer';
 
 @ApiTags('Admin - Companies')
 @ApiBearerAuth()
@@ -22,8 +24,9 @@ export class CompaniesController {
   constructor(private readonly service: CompaniesService) {}
 
   @Post()
-  create(@Body() dto: CreateCompanyDto) {
-    return this.service.create(dto);
+ async create(@Body() dto: CreateCompanyDto): Promise<CompanyResponseDto> {
+    const company = await this.service.create(dto);
+    return plainToInstance(CompanyResponseDto, company);
   }
 
   @Get()

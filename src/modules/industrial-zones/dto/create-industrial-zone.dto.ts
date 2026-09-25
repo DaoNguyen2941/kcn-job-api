@@ -9,12 +9,6 @@ export class CreateIndustrialZoneDto {
   @MaxLength(150)
   name: string;
 
-  @ApiProperty({ example: 'YEN_PHONG' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(50)
-  code: string;
-
   @ApiPropertyOptional({ example: 'Bắc Ninh' })
   @IsOptional()
   @IsString()

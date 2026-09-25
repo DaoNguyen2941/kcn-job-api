@@ -24,7 +24,7 @@ export class CreateCompanyDto {
   @IsOptional()
   @IsString()
   @MaxLength(50)
-  taxCode?: string;
+  taxCode?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()

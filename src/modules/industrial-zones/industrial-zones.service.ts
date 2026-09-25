@@ -12,6 +12,7 @@ import { UpdateIndustrialZoneDto } from './dto/update-industrial-zone.dto';
 import { QueryIndustrialZoneDto } from './dto/query-industrial-zone.dto';
 import { PaginatedResult } from '../../common/dto/paginated-result.dto';
 import { CacheHelperService } from '../../common/cache/cache-helper.service';
+import { generateCodeFromName } from 'src/lib/utils/generateCodeFromName';
 
 @Injectable()
 export class IndustrialZonesService {
@@ -19,12 +20,21 @@ export class IndustrialZonesService {
     @InjectRepository(IndustrialZone)
     private readonly repo: Repository<IndustrialZone>,
     private readonly cacheHelper: CacheHelperService,
-  ) {}
+  ) { }
 
   async create(dto: CreateIndustrialZoneDto): Promise<IndustrialZone> {
-    const existed = await this.repo.findOne({ where: { code: dto.code } });
-    if (existed) throw new ConflictException('Industrial zone code already exists');
-    const entity = this.repo.create(dto);
+    const code = generateCodeFromName(dto.name);
+
+    const existed = await this.repo.findOne({ where: { code } });
+    if (existed) {
+      throw new ConflictException('Khu công nghiệp Đã tồn tại. Vui lòng chọn tên khác hoặc chỉnh sửa tên để tạo mã khác.');
+    }
+
+    const entity = this.repo.create({
+      ...dto,
+      code, // gán code đã sinh
+    });
+
     const saved = await this.repo.save(entity);
     await this.cacheHelper.invalidateIndustrialZonesList();
     return saved;
@@ -58,10 +68,17 @@ export class IndustrialZonesService {
 
   async update(id: string, dto: UpdateIndustrialZoneDto): Promise<IndustrialZone> {
     const zone = await this.findOne(id);
-    if (dto.code && dto.code !== zone.code) {
-      const existed = await this.repo.findOne({ where: { code: dto.code } });
-      if (existed) throw new ConflictException('Industrial zone code already exists');
+
+    // Nếu muốn khi đổi name thì tự sinh lại code mới (tùy chọn)
+    if (dto.name && dto.name !== zone.name) {
+      const newCode = generateCodeFromName(dto.name);
+      const existed = await this.repo.findOne({ where: { code: newCode } });
+      if (existed && existed.id !== zone.id) {
+        throw new ConflictException('Khu công nghiệp Đã tồn tại. Vui lòng chọn tên khác hoặc chỉnh sửa tên để tạo mã khác.');
+      }
+      zone.code = newCode;
     }
+
     Object.assign(zone, dto);
     const saved = await this.repo.save(zone);
     await this.cacheHelper.invalidateIndustrialZonesList();

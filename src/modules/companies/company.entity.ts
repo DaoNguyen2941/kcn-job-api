@@ -10,6 +10,9 @@ import { LaborOrder } from '../labor-orders/labor-order.entity';
 @Index(['status'])
 @Index(['taxCode'], { unique: true })
 export class Company extends BaseEntity {
+  @Column({ type: 'bigint',  nullable: true, unsigned: true })
+  id: string;
+
   @Column({ name: 'industrial_zone_id', type: 'bigint', unsigned: true, nullable: true })
   industrialZoneId: string | null;
 
