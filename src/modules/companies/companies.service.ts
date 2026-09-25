@@ -18,29 +18,28 @@ export class CompaniesService {
   constructor(
     @InjectRepository(Company)
     private readonly repo: Repository<Company>,
-  ) {}
+  ) { }
 
-async create(dto: CreateCompanyDto): Promise<CompanyResponseDto> {
-  if (dto.taxCode) {
-    const existed = await this.repo.findOne({ where: { taxCode: dto.taxCode } });
-    if (existed) {
-      throw new ConflictException('Tax code already exists');
+  async create(dto: CreateCompanyDto): Promise<CompanyResponseDto> {
+    if (dto.taxCode) {
+      const existed = await this.repo.findOne({ where: { taxCode: dto.taxCode } });
+      if (existed) {
+        throw new ConflictException('Tax code already exists');
+      }
     }
+    const entity = this.repo.create(dto);
+    const saved = await this.repo.save(entity);
+    return saved;
   }
-
-  const entity = this.repo.create(dto);
-  const saved = await this.repo.save(entity); // ← lúc này mới có id
-
-  console.log('saved', saved); // sẽ có id
-  return saved;
-}
 
   async findAll(query: QueryCompanyDto): Promise<PaginatedResult<Company>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const qb = this.repo
       .createQueryBuilder('company')
-      .leftJoinAndSelect('company.industrialZone', 'zone');
+      .leftJoinAndSelect('company.industrialZone', 'zone')
+      .leftJoinAndSelect('company.laborOrders', 'laborOrder')
+      .leftJoinAndSelect('company.contacts', 'contact');
 
     if (query.keyword) {
       qb.andWhere('(company.name LIKE :kw OR company.shortName LIKE :kw OR company.taxCode LIKE :kw)', {
