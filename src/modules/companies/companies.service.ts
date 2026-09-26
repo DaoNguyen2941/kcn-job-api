@@ -39,7 +39,6 @@ export class CompaniesService {
       .createQueryBuilder('company')
       .leftJoinAndSelect('company.industrialZone', 'zone')
       .leftJoinAndSelect('company.laborOrders', 'laborOrder')
-      .leftJoinAndSelect('company.contacts', 'contact');
 
     if (query.keyword) {
       qb.andWhere('(company.name LIKE :kw OR company.shortName LIKE :kw OR company.taxCode LIKE :kw)', {
